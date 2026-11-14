@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net" agent="delivery-insights" version="24.0.0">
+  <diagram name="Architecture" id="dm-assistant-arch">
+    <mxGraphModel dx="1000" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1160" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="user" value="Пользователь&#10;(Delivery-менеджер / РП / руководство)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="k8s" value="Kubernetes (staging)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="120" width="540" height="380" as="geometry" />
+        </mxCell>
+
+        <mxCell id="frontend" value="Frontend (статичный лендинг)&#10;HTML / JS / CSS, nginx&#10;• форма запуска анализа&#10;• сводка, ТТМ-секция, проблемные зоны&#10;• ретро-карточки, action plan, экспорт" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="310" y="160" width="220" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="backend" value="Backend (FastAPI, Python)&#10;POST /api/analyze · GET /api/health&#10;• analysis.py — движок метрик и находок&#10;• ttm.py — Time-to-Market по методике&#10;• rules.yaml — пороги и тексты правил&#10;• tracker.py — клиент трекера (MCP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="570" y="160" width="230" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sqlite" value="SQLite&#10;• прогоны анализа и находки&#10;• снапшоты статусов карточек&#10;(история переходов для flow-метрик)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="350" width="170" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grafana" value="Grafana&#10;дашборды поверх SQLite&#10;(динамика прогонов и находок)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="330" y="370" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tracker" value="Трекер задач&#10;(внешняя система)&#10;доступ через MCP-мост,&#10;Bearer JWT, read-only" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="890" y="200" width="220" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cicd" value="CI/CD (GitLab)&#10;линт → сборка образов → реестр контейнеров" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="580" width="270" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="registry" value="Реестр образов&#10;(backend / frontend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="580" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="user" target="frontend">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell value="HTTPS (лендинг)" as="value" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="frontend" target="backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2lbl" value="REST /api" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="backend" target="tracker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3lbl" value="JSON-RPC (MCP)&#10;задачи очереди, статусы, спринты" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="-0.15" y="-20" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="backend" target="sqlite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4lbl" value="сохранение отчётов&#10;и снапшотов" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e4">
+          <mxGeometry x="0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="grafana" target="sqlite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5lbl" value="SQL (read-only)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e5">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cicd" target="registry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="registry" target="k8s">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
