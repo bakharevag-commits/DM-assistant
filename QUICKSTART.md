@@ -1,97 +1,97 @@
-# Quick start — DM-assistant / Delivery Insights
+# Quick start
 
-Минимальный путь: поднять стек, подключиться к XTracker, получить отчёт.
-Все команды проверены на живых досках XTracker (2026‑11‑22).
+Minimal path: start the stack, connect to your issue tracker, get a report.
 
 ---
 
-## 1. Что нужно до запуска
+## 1. Prerequisites
 
-| Что | Зачем | Где взять |
+| What | Why | Where to get it |
 |---|---|---|
-| JWT XTracker | доступ к MCP‑мосту Nebula | личный токен в трекере |
-| `XTRACKER_MCP_URL` | адрес MCP‑моста | в `.env.example` уже прописан стенд |
-| Ключ очереди (`queue_key`) | что анализируем | напр. `VITRINA`, `PLSPRINT` |
-| Docker + Compose | самый быстрый запуск | — |
+| API session token | access to the issue tracker API | issued by your tracker |
+| MCP endpoint URL | address of the MCP bridge | from your deployment (see `.env.example`) |
+| Queue key | what to analyze | key of the team queue, e.g. `TEAM` |
+| Docker + Compose | fastest way to run | — |
 
 ---
 
-## 2. Запуск через Docker (рекомендуется)
+## 2. Run with Docker (recommended)
 
 ```bash
 cp .env.example .env
-# откройте .env и заполните:
-#   XTRACKER_MCP_TOKEN=<ваш JWT>
-#   GRAFANA_ADMIN_PASSWORD=<любой пароль>
+# open .env and fill in:
+#   MCP session token  -> the variable used by your deployment
+#   MCP endpoint URL   -> the variable used by your deployment
+#   GRAFANA_ADMIN_PASSWORD=<any password>
 docker compose up --build
 ```
 
-Сервисы и порты из [`docker-compose.yml`](docker-compose.yml):
+Services and ports from [`docker-compose.yml`](docker-compose.yml):
 
-| Сервис | Порт | Назначение |
+| Service | Port | Purpose |
 |---|---|---|
-| frontend | `http://localhost:8084` | лендинг (nginx, проксирует API) |
+| frontend | `http://localhost:8084` | landing page (nginx, proxies the API) |
 | backend | `http://localhost:8000` | FastAPI, `/api/health`, `/api/analyze` |
-| grafana | `http://localhost:3001` | дашборды по истории анализов (SQLite) |
+| grafana | `http://localhost:3001` | dashboards over analysis history (SQLite) |
 
-Откройте `http://localhost:8084`, вставьте ссылку на доску трекера и ключ очереди.
+Open `http://localhost:8084`, paste a board URL and the queue key.
 
 ---
 
-## 3. Запуск без Docker
+## 3. Run without Docker
 
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-export XTRACKER_MCP_URL="https://nebula-staging.x5.ru/..."
-export XTRACKER_MCP_TOKEN="<ваш JWT>"
+# set the MCP endpoint URL and session token env vars used by your deployment
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Для транспорта через локальный CLI дополнительно нужен бинарь `xt` и профиль
-с API‑ключом (`xt auth status` должен быть зелёным) — см. §4.
+For the local CLI transport you additionally need the tracker CLI binary on
+`PATH` and an authenticated CLI profile (`<cli> auth status` must be green) —
+see §4.
 
 ---
 
-## 4. Два транспорта данных: `TRACKER_TRANSPORT`
+## 4. Two data transports: `TRACKER_TRANSPORT`
 
-Оба транспорта реализуют один и тот же контракт клиента, поэтому отчёт
-не зависит от того, как получены данные.
+Both transports implement the same client contract, so the report does not
+depend on how the data was fetched.
 
-| `TRACKER_TRANSPORT` | Как ходим в трекер | Когда использовать |
+| `TRACKER_TRANSPORT` | How it reaches the tracker | When to use |
 |---|---|---|
-| `mcp` (по умолчанию) | MCP‑мост Nebula, персональный JWT | штатный режим, работает отовсюду, где есть egress |
-| `cli` | локальный бинарь `xt` (subprocess, JSON) | когда из пода/машины нет egress до MCP‑моста |
+| `mcp` (default) | MCP bridge, personal session token | normal mode; needs network egress to the bridge |
+| `cli` | local tracker CLI binary (subprocess, JSON) | when egress to the MCP bridge is unavailable |
 
 ```bash
-# транспорт по умолчанию — mcp; менять не нужно
-# переключение на CLI:
+# default transport is mcp; nothing to change
+# switch to CLI:
 export TRACKER_TRANSPORT=cli
-xt auth status        # профиль должен быть авторизован
 ```
 
-Что важно знать про `cli`:
+What to know about `cli`:
 
-* `REQUIRE_OWN_TOKEN` в режиме `cli` игнорируется — JWT пользователя не нужен,
-  авторизация живёт в профиле `xt`;
-* `mcp_url` в запросе `/api/analyze` с `cli` не используется (вернётся `400`,
-  это защита от путаницы, а не сбой);
-* если `xt` не найден — backend стартует, но анализ вернёт понятную ошибку.
+* `REQUIRE_OWN_TOKEN` is ignored in `cli` mode — no user session token is
+  needed, authorization lives in the CLI profile;
+* `mcp_url` in an `/api/analyze` request is not used with `cli` and returns
+  `400` — that is a guard against confusion, not a failure;
+* if the CLI binary is missing, the backend still starts and the analysis
+  returns a clear error.
 
 ---
 
-## 5. Проверка живости
+## 5. Health check
 
 ```bash
 curl -s http://localhost:8000/api/health | python3 -m json.tool
 ```
 
-В ответе смотрите `tracker_transport` (какой транспорт активен) и
+In the response check `tracker_transport` (which transport is active) and
 `require_own_token`.
 
-Демо‑отчёт без трекера (для проверки UI):
+Demo report without a tracker (to check the UI):
 
 ```bash
 curl -s http://localhost:8000/api/demo | python3 -m json.tool | head -40
@@ -99,50 +99,50 @@ curl -s http://localhost:8000/api/demo | python3 -m json.tool | head -40
 
 ---
 
-## 6. Анализ очереди через API
+## 6. Analyze a queue via the API
 
 ```bash
 curl -s -X POST http://localhost:8000/api/analyze \
   -H 'Content-Type: application/json' \
-  -d '{"queue_key": "VITRINA"}' | python3 -m json.tool | head -60
+  -d '{"queue_key": "TEAM"}' | python3 -m json.tool | head -60
 ```
 
-Только POST, используйте `curl -X POST` (GET вернёт `405`).
-Поля запроса — `queue_key` либо `board_url` (id доски можно взять из адреса
-`https://xtracker.x5team.ru/agile/board/<id>`).
+POST only — use `curl -X POST` (GET returns `405`).
+Request fields: `queue_key` or `board_url` (the board id can be taken from the
+board URL `<tracker-base>/agile/board/<id>`).
 
 ---
 
-## 7. Локальные проверки (без сети к трекеру)
+## 7. Local checks (no network needed)
 
-Все скрипты лежат в `backend/` и запускаются напрямую:
+All scripts live in `backend/` and run directly:
 
 ```bash
-python3 backend/verify_ttm.py            # ТТМ/lead-time: 153 / 153
-python3 backend/verify_all_rules.py      # правила, статусы, гигиена доски
-python3 backend/verify_offline.py        # расчёты на офлайн‑фикстурах
-python3 backend/verify_stage_chain.py    # цепочка этапов: 18 / 18
-node --check frontend/app.js             # синтаксис фронта
+python3 backend/verify_ttm.py            # TTM / lead time: 153 / 153
+python3 backend/verify_all_rules.py      # rules, statuses, board hygiene
+python3 backend/verify_offline.py        # calculations on offline fixtures
+python3 backend/verify_stage_chain.py    # stage chain: 18 / 18
+node --check frontend/app.js             # frontend syntax
 ```
 
-Запускайте их после правок в `backend/analysis.py`, `backend/status_map.py`,
-`backend/ttm.py` — это быстрый способ поймать регрессию до выката.
+Run them after touching `backend/analysis.py`, `backend/status_map.py`,
+`backend/ttm.py` — the fastest way to catch a regression before rollout.
 
 ---
 
-## 8. Частые проблемы
+## 8. Troubleshooting
 
-| Симптом | Причина | Что делать |
+| Symptom | Cause | Fix |
 |---|---|---|
-| `401` / `403` на `/api/analyze` | нет/просрочен JWT | вставьте свежий токен в форму или в `.env` |
-| `400 ... MCP URL не используется` | включён `cli`, а передан `mcp_url` | уберите `mcp_url` из запроса |
-| `xt` не найден | в `PATH` нет бинаря | `export PATH="$HOME/.local/bin:$PATH"` |
-| Grafana требует пароль при старте | не задан `GRAFANA_ADMIN_PASSWORD` | задайте его в `.env` |
-| Пустые Waiting Time / Flow Efficiency | нет истории статусов | это ожидаемо: значения копятся со снапшотов в SQLite |
+| `401` / `403` on `/api/analyze` | missing or expired session token | paste a fresh session token in the form or `.env` |
+| `400 ... MCP URL is not used` | `cli` mode with `mcp_url` sent | remove `mcp_url` from the request |
+| CLI binary not found | binary not on `PATH` | add its directory to `PATH` |
+| Grafana asks for a password at start | `GRAFANA_ADMIN_PASSWORD` not set | set it in `.env` |
+| Waiting Time / Flow Efficiency are empty | no status history yet | expected: values accumulate from SQLite snapshots |
 
 ---
 
-## Ссылки
+## Links
 
-* [`README.md`](README.md) — что умеет система, архитектура, метрики.
-* [`docs/architecture.drawio`](docs/architecture.drawio) — схема архитектуры.
+* [`README.md`](README.md) — features, architecture, metrics.
+* [`docs/architecture.drawio`](docs/architecture.drawio) — architecture diagram.
