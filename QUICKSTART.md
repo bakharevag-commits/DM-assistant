@@ -146,3 +146,15 @@ Run them after touching `backend/analysis.py`, `backend/status_map.py`,
 
 * [`README.md`](README.md) — features, architecture, metrics.
 * [`docs/architecture.drawio`](docs/architecture.drawio) — architecture diagram.
+
+---
+
+## UI Preview & Demo
+
+To protect corporate data and internal workflows, UI screenshots are available upon request during the interview process.
+
+The interface includes:
+
+* Real-time flow metrics dashboard (TTM, Lead Time, WIP).
+* Automated bottleneck and stagnation alerts.
+* Personal overload tracking (1 person = 1 active task rule).
