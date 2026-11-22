@@ -127,3 +127,15 @@ flowchart TB
 
 * **Zero-Persistence Authentication:** User MCP tokens are stored exclusively in ephemeral session memory (`In-Memory / sessionStorage`) and passed per request via Bearer authorization. Tokens are never logged or persisted in PostgreSQL.
 * **Anonymized Storage:** The database stores only structural status-to-stage mappings, aggregated historical trend snapshots, and anonymous usefulness ratings (`👍 / 👎`) for coaching insights.
+
+---
+
+## UI Preview & Demo
+
+To protect corporate data and internal workflows, UI screenshots are available upon request during the interview process.
+
+The interface includes:
+
+* Real-time flow metrics dashboard (TTM, Lead Time, WIP).
+* Automated bottleneck and stagnation alerts.
+* Personal overload tracking (1 person = 1 active task rule).
